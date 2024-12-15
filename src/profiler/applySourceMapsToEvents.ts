@@ -79,17 +79,26 @@ const applySourceMapsToEvents = async (
         column: Number(event.args.column),
       });
       /**
-       * The categories can help us better visualise the profile if we modify the categories.
+       * The categories can help us better visualize the profile if we modify the categories.
        * We change these categories only in the root level and not deeper inside the args, just so we have our
-       * original categories as well as these modified categories (as the modified categories simply help with visualisation)
+       * original categories as well as these modified categories (as the modified categories simply help with visualization)
        */
       const nodeModuleNameIfAvailable = findNodeModuleNameIfExists(
         event.cat!,
         sm.source
       );
+      const name = sm.source
+        ? event.name?.replace(
+            /\(.*\)/,
+            `(${path
+              .relative(process.cwd(), sm.source)
+              .replace(/^.*\/node_modules\//, '')})`
+          )
+        : event.name;
       event.cat = improveCategories(nodeModuleNameIfAvailable, event.cat!);
       event.args = {
         ...event.args,
+        name,
         url: sm.source,
         line: sm.line,
         column: sm.column,
@@ -98,6 +107,7 @@ const applySourceMapsToEvents = async (
         allocatedName: event.name,
         node_module: nodeModuleNameIfAvailable,
       };
+      event.name = name;
     } else {
       throw new Error(
         `Source maps could not be derived for an event at ${event.ts} and with stackFrame ID ${event.sf}`
